@@ -11,7 +11,7 @@ pub use crate::blocks::BLOCK_SIZE_BYTES;
 use crate::bucket_pointers::{BucketPointer, BucketPointers};
 use crate::classifier::{Classifier, ClassifierInfo, ClassifierStorage};
 pub use crate::definitions::Buffer;
-use crate::insertion_sort::is_sorted_by;
+pub use crate::insertion_sort::is_sorted_by;
 use crate::permute::{Overflow, Permute, SwapBuffers};
 use crate::sampler::Sampler;
 
@@ -63,12 +63,12 @@ fn oversampling_factor(n: usize) -> f64 {
     }
 }
 
-struct Sorter<T> {
-    sampler: Sampler<SmallRng>,
+pub struct Sorter<T, R> {
+    sampler: Sampler<R>,
     _marker: PhantomData<T>,
 }
 
-struct Storage<T: Sortable> {
+pub struct Storage<T: Sortable> {
     classifier: ClassifierStorage<T>,
     buffers: Buffers<T>,
     bucket_pointers: BucketPointers<T>,
@@ -89,7 +89,20 @@ impl<T: Sortable> Default for Storage<T> {
     }
 }
 
-impl<T: Sortable> Sorter<T> {
+impl<T: Sortable> Sorter<T, SmallRng> {
+    pub fn with_small_rng() -> Self {
+        Self::new(SmallRng::from_rng(thread_rng()).unwrap())
+    }
+}
+
+impl<T: Sortable, R: Rng> Sorter<T, R> {
+    pub fn new(rng: R) -> Self {
+        Self {
+            sampler: Sampler::new(rng),
+            _marker: Default::default(),
+        }
+    }
+
     #[allow(unused)]
     pub fn sort<F>(&mut self, values: &mut [T], storage: &mut Storage<T>, is_less: &F)
     where
@@ -379,10 +392,7 @@ where
     F: Fn(&T, &T) -> bool,
 {
     let mut storage = Storage::default();
-    let mut sorter = Sorter {
-        sampler: Sampler::with_small_rng(),
-        _marker: Default::default(),
-    };
+    let mut sorter = Sorter::with_small_rng();
     sorter.sort(values, &mut storage, &is_less);
 }
 

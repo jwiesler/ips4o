@@ -1,13 +1,7 @@
 use rand::distributions::Uniform;
 use rand::prelude::*;
 
-pub struct Sampler<R: Rng>(R);
-
-impl Sampler<SmallRng> {
-    pub fn with_small_rng() -> Self {
-        Self::new(SmallRng::from_rng(thread_rng()).unwrap())
-    }
-}
+pub struct Sampler<R>(R);
 
 impl<R: Rng> Sampler<R> {
     pub fn new(rng: R) -> Sampler<R> {

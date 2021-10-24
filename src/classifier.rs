@@ -114,6 +114,7 @@ where
         sorted_splitters: &'a mut Storage<T>,
         is_less: &'a F,
         log_buckets: u32,
+        use_equal_buckets: bool,
     ) -> Self {
         debug_assert!(log_buckets <= LOG_MAX_BUCKETS + 1);
         let num_buckets = 1 << log_buckets;
@@ -121,6 +122,11 @@ where
         // Duplicate the last splitter
         let num_splitters = num_buckets - 1;
         sorted_splitters[num_splitters] = sorted_splitters[num_buckets - 1];
+        let num_buckets = if use_equal_buckets {
+            num_buckets * 2
+        } else {
+            num_buckets
+        };
         Self {
             tree: Tree::new(storage, sorted_splitters, is_less, log_buckets),
             sorted_splitters,
@@ -170,6 +176,7 @@ where
                 &mut storage.splitter,
                 is_less,
                 log_buckets,
+                use_equal_buckets,
             ),
             use_equal_buckets,
         )
@@ -178,36 +185,39 @@ where
     #[inline]
     pub fn classify<const EQUAL_BUCKETS: bool>(&self, value: &T) -> usize {
         let index = self.tree.classify(value);
-        let bucket = index - self.num_buckets;
-        if EQUAL_BUCKETS {
+        let bucket = if EQUAL_BUCKETS {
+            let bucket = index - self.num_buckets / 2;
             let equal_to_splitter = !(self.tree.is_less)(value, &self.sorted_splitters[bucket]);
-            2 * index + equal_to_splitter as usize - 2 * self.num_buckets
+            2 * index + equal_to_splitter as usize - self.num_buckets
         } else {
-            bucket
-        }
+            index - self.num_buckets
+        };
+        debug_assert!(bucket < self.num_buckets);
+        bucket
     }
 
-    // TODO why is this different from the other classify used?
     #[inline]
     fn classify_all<const EQUAL_BUCKETS: bool, const LOG_BUCKETS: u32, const N: usize>(
         &self,
         values: &[T; N],
     ) -> [u32; N] {
+        debug_assert_eq!(
+            self.num_buckets,
+            1usize << (LOG_BUCKETS + EQUAL_BUCKETS as u32)
+        );
         let mut indices = self.tree.classify_all::<LOG_BUCKETS, N>(values);
         if EQUAL_BUCKETS {
             for i in 0..N {
                 let value = &values[i];
                 let index = indices[i];
-                let equal_to_splitter = !(self.tree.is_less)(
-                    value,
-                    // TODO here
-                    &self.sorted_splitters[index as usize - self.num_buckets / 2],
-                );
+                let bucket = index as usize - self.num_buckets / 2;
+                let equal_to_splitter = !(self.tree.is_less)(value, &self.sorted_splitters[bucket]);
                 indices[i] = 2 * index + (equal_to_splitter as u32);
             }
         }
         for value in indices.iter_mut() {
             *value -= self.num_buckets as u32;
+            debug_assert!((*value as usize) < self.num_buckets);
         }
         indices
     }

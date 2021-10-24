@@ -1,0 +1,9 @@
+[package]
+name = "ips4o"
+version = "0.1.0"
+edition = "2018"
+
+[dependencies]
+rand = { version = "0.8", features = ["small_rng"] }
+
+[profile.release]

@@ -1,7 +1,6 @@
 use crate::{Sortable, MAX_BUCKETS};
 
 pub const BLOCK_SIZE_BYTES: usize = 1024;
-pub const DATA_ALIGNMENT: usize = 128;
 
 pub struct Buffer<'a, T: Sortable> {
     storage: &'a mut T::Buffer,

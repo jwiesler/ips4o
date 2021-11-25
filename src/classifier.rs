@@ -121,7 +121,7 @@ where
 
         // Duplicate the last splitter
         let num_splitters = num_buckets - 1;
-        sorted_splitters[num_splitters] = sorted_splitters[num_buckets - 1];
+        sorted_splitters[num_splitters] = sorted_splitters[num_splitters - 1];
         let num_buckets = if use_equal_buckets {
             num_buckets * 2
         } else {

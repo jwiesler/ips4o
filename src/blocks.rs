@@ -33,7 +33,7 @@ impl<'a, T: Sortable> Buffer<'a, T> {
 
     #[inline]
     pub fn as_slice(&self) -> &[T] {
-        self.storage.as_ref()
+        &self.storage.as_ref()[..*self.index]
     }
 }
 

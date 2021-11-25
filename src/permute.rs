@@ -64,7 +64,7 @@ impl<'a, T: Sortable> Overflow<'a, T> {
     #[inline]
     pub fn take(&mut self) -> &mut T::Buffer {
         self.used = false;
-        &mut self.buffer
+        self.buffer
     }
 
     #[inline]
@@ -129,6 +129,8 @@ where
                 WriteBlock::Occupied(write) => {
                     let block = &mut self.values[write..write + T::BUFFER_SIZE];
                     let new_target = self.classifier.classify::<EQUAL_BUCKETS>(&block[0]);
+
+                    // Swap only if this block is not already in the right bucket
                     if new_target != target_bucket {
                         other_swap.as_mut().copy_from_slice(block);
                         block.copy_from_slice(current_swap.as_ref());

@@ -168,7 +168,8 @@ where
         let num_buckets = 1 << log_buckets;
         debug_assert!(num_buckets <= storage.splitter.len());
         debug_assert!(splitter_count < num_buckets);
-        storage.splitter[splitter_count + 1..num_buckets].fill(samples[splitter]);
+        storage.splitter[splitter_count..num_buckets].fill(samples[splitter]);
+        debug_assert!(is_sorted_by(&storage.splitter[..num_buckets], is_less));
 
         (
             Classifier::new(

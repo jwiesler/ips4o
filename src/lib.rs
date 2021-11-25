@@ -47,7 +47,7 @@ fn log_buckets(n: usize) -> u32 {
     } else if n <= TWO_LEVEL_THRESHOLD {
         // Only two more levels until we reach the base case, split the buckets
         // evenly
-        1.max((n / BASE_CASE_SIZE).log2() + 1) / 2
+        1.max(((n / BASE_CASE_SIZE).log2() + 1) / 2)
     } else {
         // Use the maximum number of buckets
         LOG_MAX_BUCKETS
@@ -344,8 +344,8 @@ impl<T: Sortable, R: Rng> Sorter<T, R> {
         for bucket in 0..classifier.num_buckets() {
             // No buffer overflow with align_to_next_block on the last bucket end
             // since we write to the overflow buffer in the permutation instead
-            let start = T::align_to_next_block(bucket_starts[bucket]);
-            let stop = T::align_to_next_block(bucket_starts[bucket + 1]);
+            let start = bucket_starts[bucket];
+            let stop = bucket_starts[bucket + 1];
 
             bucket_pointers[bucket] = BucketPointer::new(start, stop, first_empty_position);
         }

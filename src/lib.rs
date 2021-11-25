@@ -95,6 +95,15 @@ impl<T: Sortable> Sorter<T, SmallRng> {
     }
 }
 
+#[inline]
+fn base_case_sort<T, F>(values: &mut [T], is_less: &F)
+where
+    T: Copy,
+    F: Fn(&T, &T) -> bool,
+{
+    insertion_sort::sort(values, is_less);
+}
+
 impl<T: Sortable, R: Rng> Sorter<T, R> {
     pub fn new(rng: R) -> Self {
         Self {
@@ -109,7 +118,7 @@ impl<T: Sortable, R: Rng> Sorter<T, R> {
         F: Fn(&T, &T) -> bool,
     {
         if values.len() <= 2 * BASE_CASE_SIZE {
-            insertion_sort::sort(values, is_less);
+            base_case_sort(values, is_less);
         } else {
             self.sample_sort(values, storage, is_less);
         }
@@ -240,7 +249,7 @@ impl<T: Sortable, R: Rng> Sorter<T, R> {
             // Perform final base case sort here, while the data is still cached
             // TODO this might be very big for a bad bucket distribution
             if is_last_level || (end - start <= 2 * BASE_CASE_SIZE) {
-                insertion_sort::sort(&mut values[start..end], is_less);
+                base_case_sort(&mut values[start..stop], is_less);
             }
         }
 
